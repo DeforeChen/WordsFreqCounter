@@ -29,7 +29,7 @@ def replaceZhonPunctuations(line):
     return noEnPuncLine
 
 def main():
-    infile = open("/Users/Chen/Documents/Python/DivideWords/桃花源记.txt", 'r')
+    infile = open("./桃花源记.txt", 'r')
 
     words = []
     data = []
