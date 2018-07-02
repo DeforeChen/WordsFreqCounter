@@ -3,10 +3,12 @@
 
 from string import punctuation
 from zhon.hanzi import punctuation
-
+from xlutils.copy import copy
 from opencc import OpenCC
+
 import re
 import xlwt
+import xlrd
 import sys
 import os
 import string
@@ -41,7 +43,7 @@ def replaceZhonPunctuations(line):
     noEnLine = re.sub("[A-Za-z0-9]", "", noEnPuncLine)
 
     # 簡體轉化至繁體
-    openCC = OpenCC('s2t')  # convert from Simplified Chinese to Traditional Chinese
+    openCC = OpenCC('t2s')  # convert from Simplified Chinese to Traditional Chinese
     finalLine = openCC.convert(noEnLine)
     # print(finalLine)
 
@@ -56,6 +58,21 @@ def singleFileCounter(filePath, filename):
         processLine(line, filename)
     infile.close()
 
+def recordDataIntoXls(sheet, items, count):
+    words = []
+    data = []
+
+    sheet.col(2).width = 256 * 15
+
+    for i in range(len(items) - 1, len(items) - count - 1, -1):
+        sheet.write(i, 0, str(items[i][0]))  # 其中的'0-行, 0-列'指定表中的单元，'EnglishName'是向该单元写入的内容
+        sheet.write(i, 1, str(items[i][1]))
+        indexName = str(indexFileName[(items[i][1])])
+        sheet.write(i, 2, indexName)
+
+        data.append(items[i][0])
+        words.append(items[i][1])
+
 
 def main():
     words = []
@@ -64,6 +81,7 @@ def main():
     # 遍历文件夹中所有的文档
     for fpathe, dirs, fs in os.walk('./文档/'):
         for filename in fs:
+            print ('filename =' + filename)
             if os.path.splitext(filename)[1] == '.txt':
                 fileNameWithoutExp = os.path.splitext(filename)[0]
                 filepath = os.path.join(fpathe, filename)
@@ -79,21 +97,22 @@ def main():
 
     count = len(wordCountDict)
 
-    filepath = r'./test1.xls'
+    filepath = './test1.xls'
 
-    book  = xlwt.Workbook(encoding='utf-8', style_compression=0)
-    sheet = book.add_sheet('test', cell_overwrite_ok=True)
-
-    for i in range(len(items) - 1, len(items) - count - 1, -1):
-        sheet.write(i, 0, str(items[i][0]))  # 其中的'0-行, 0-列'指定表中的单元，'EnglishName'是向该单元写入的内容
-        sheet.write(i, 1, str(items[i][1]))
-        indexname = str(indexFileName[(items[i][1])])
-        sheet.write(i, 2, indexname)
-
-        data.append(items[i][0])
-        words.append(items[i][1])
-
-    book.save(filepath)
+    # 判断xls 是否存在，不存在就创建，存在就去覆盖写入
+    if os.path.exists(filepath):
+        filename = os.path.basename(filepath)
+        print (filename)
+        book = xlrd.open_workbook(filepath, formatting_info=True, encoding_override='utf-8')
+        wb = copy(book)
+        sheet = wb.get_sheet(0)
+        recordDataIntoXls(sheet, items, count)
+        wb.save(filepath)
+    else:
+        book = xlwt.Workbook(encoding='utf-8', style_compression=0)
+        sheet = book.add_sheet('统计', cell_overwrite_ok=True)
+        recordDataIntoXls(sheet, items, count)
+        book.save(filepath)
 
 if __name__ == '__main__':
     main()
