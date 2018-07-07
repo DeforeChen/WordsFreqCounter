@@ -11,7 +11,7 @@ import xlwt
 import xlrd
 import sys
 import os
-import string
+# import string
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -74,12 +74,17 @@ def recordDataIntoXls(sheet, items, count):
         words.append(items[i][1])
 
 
-def main():
+def excuteCounter(documentPath, excelName):
     words = []
     data = []
 
     # 遍历文件夹中所有的文档
-    for fpathe, dirs, fs in os.walk('./文档/'):
+    print('文档文件夹为 ' + documentPath)
+    for fpathe, dirs, fs in os.walk(documentPath):
+        if len(fs) == 0:
+            print('文件夹下不包含文档')
+            return False
+
         for filename in fs:
             print ('filename =' + filename)
             if os.path.splitext(filename)[1] == '.txt':
@@ -90,29 +95,23 @@ def main():
 
     # 从字典中获取数据对
     pairs = list(wordCountDict.items())
-    print(pairs)
     # 列表中的数据对交换位置,数据对排序
     items = [[x, y] for (y, x) in pairs]
     items.sort(reverse=True)
 
     count = len(wordCountDict)
 
-    filepath = './test1.xls'
+    filepath = documentPath + '/' + excelName + '.xls'  # './test1.xls'
 
     # 判断xls 是否存在，不存在就创建，存在就去覆盖写入
     if os.path.exists(filepath):
-        filename = os.path.basename(filepath)
-        print (filename)
-        book = xlrd.open_workbook(filepath, formatting_info=True, encoding_override='utf-8')
-        wb = copy(book)
-        sheet = wb.get_sheet(0)
-        recordDataIntoXls(sheet, items, count)
-        wb.save(filepath)
-    else:
-        book = xlwt.Workbook(encoding='utf-8', style_compression=0)
-        sheet = book.add_sheet('统计', cell_overwrite_ok=True)
-        recordDataIntoXls(sheet, items, count)
-        book.save(filepath)
+        os.remove(filepath)
 
-if __name__ == '__main__':
-    main()
+    book = xlwt.Workbook(encoding='utf-8', style_compression=0)
+    sheet = book.add_sheet('统计', cell_overwrite_ok=True)
+    recordDataIntoXls(sheet, items, count)
+    book.save(filepath)
+
+    os.system('open ' + filepath)
+    os.system('open ' + documentPath)
+    return True
