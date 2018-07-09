@@ -96,7 +96,9 @@ def excuteCounter(documentPath, excelName):
     count = len(wordCountDict)
 
     filepath = documentPath + '/' + excelName + '.xls'  # './test1.xls'
-    filepath = filepath.decode('utf-8').encode('GB2312')
+    if os.name == 'nt': # 表示 Windows
+        filepath = filepath.decode('utf-8').encode('GB2312')
+
     # 判断xls 是否存在，不存在就创建，存在就去覆盖写入
     if os.path.exists(filepath):
         os.remove(filepath)
@@ -107,6 +109,10 @@ def excuteCounter(documentPath, excelName):
     book.save(filepath)
     print (filepath)
 
-    os.system(filepath)
+    if os.name == 'nt':  # 表示 Windows
+        os.system(filepath)
+    elif os.name == 'posix':  # mac 或 linux
+        os.system('open ' + filepath)
+        os.system('open ' + documentPath)
 
     return True
