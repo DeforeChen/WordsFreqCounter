@@ -96,7 +96,7 @@ def excuteCounter(documentPath, excelName):
     count = len(wordCountDict)
 
     filepath = documentPath + '/' + excelName + '.xls'  # './test1.xls'
-
+    filepath = filepath.decode('utf-8').encode('GB2312')
     # 判断xls 是否存在，不存在就创建，存在就去覆盖写入
     if os.path.exists(filepath):
         os.remove(filepath)
@@ -105,7 +105,8 @@ def excuteCounter(documentPath, excelName):
     sheet = book.add_sheet('统计', cell_overwrite_ok=True)
     recordDataIntoXls(sheet, items, count)
     book.save(filepath)
+    print (filepath)
 
-    os.system('open ' + filepath)
-    os.system('open ' + documentPath)
+    os.system(filepath)
+
     return True
