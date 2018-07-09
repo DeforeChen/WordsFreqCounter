@@ -3,15 +3,12 @@
 
 from string import punctuation
 from zhon.hanzi import punctuation
-from xlutils.copy import copy
 from opencc import OpenCC
 
 import re
 import xlwt
-import xlrd
 import sys
 import os
-# import string
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
