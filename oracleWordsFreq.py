@@ -3,7 +3,7 @@
 
 from string import punctuation
 from zhon.hanzi import punctuation
-from opencc import OpenCC
+from langconv import *
 
 import re
 import xlwt
@@ -30,6 +30,7 @@ def processLine(line, fileName):
         else:
             wordCountDict[word] = 1
             indexFileName[word] = fileName
+    print ('wordCountDict 賦值完畢')
 
 def replaceZhonPunctuations(line):
     # 去掉其中的中文标点符号
@@ -40,9 +41,7 @@ def replaceZhonPunctuations(line):
     noEnLine = re.sub("[A-Za-z0-9]", "", noEnPuncLine)
 
     # 簡體轉化至繁體
-    openCC = OpenCC('t2s')  # convert from Simplified Chinese to Traditional Chinese
-    finalLine = openCC.convert(noEnLine)
-    # print(finalLine)
+    finalLine = Converter('zh-hans').convert(noEnLine)
 
     return finalLine
 
@@ -72,11 +71,9 @@ def recordDataIntoXls(sheet, items, count):
 
 
 def excuteCounter(documentPath, excelName):
-    words = []
-    data = []
-
+    wordCountDict.clear()
     # 遍历文件夹中所有的文档
-    print('文档文件夹为 ' + documentPath)
+    print('清空wordCountDict ')
     for fpathe, dirs, fs in os.walk(documentPath):
         if len(fs) == 0:
             print('文件夹下不包含文档')
