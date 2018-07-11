@@ -7,8 +7,10 @@ from langconv import *
 
 import re
 import xlwt
+import docx
 import sys
 import os
+
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -16,9 +18,11 @@ sys.setdefaultencoding('utf-8')
 global wordCountDict, indexFileName
 wordCountDict = {}  # 建立用于计算词频的空字典
 indexFileName = {}  # 建立词频所属的文件的索引，和wordCountDict拥有相同的 key
+extendDocx = ['.docx', 'doc']
 
 # 对文本的每一行计算词频的函数
 def processLine(line, fileName):
+    print(line)
     # 用空格替换标点符号
     line = replaceZhonPunctuations(line)
 
@@ -26,15 +30,16 @@ def processLine(line, fileName):
         if word in wordCountDict:
             wordCountDict[word] += 1
             if indexFileName[word].find(fileName) == -1:
-                indexFileName[word] = indexFileName[word] + ',' + fileName
+                indexFileName[word] = indexFileName[word] + ',  ' + fileName
         else:
             wordCountDict[word] = 1
             indexFileName[word] = fileName
     print ('wordCountDict 賦值完畢')
 
 def replaceZhonPunctuations(line):
+    print('--------' + line)
     # 去掉其中的中文标点符号
-    noZhPuncLine = re.sub(ur"[%s]+" % punctuation, "", line.decode("utf-8"))
+    noZhPuncLine = re.sub(ur"[%s]+" % punctuation, "", line.decode("utf-8")) #
     # 去掉其中的英文标点符号
     noEnPuncLine = re.sub("[\s+\.\!\/_,$%^*(+\"\']+|[+——！，。？?、~@#￥%……&*（）]+".decode("utf8"), "".decode("utf8"),noZhPuncLine)
     # 去掉其中的英文或数字
@@ -46,13 +51,28 @@ def replaceZhonPunctuations(line):
     return finalLine
 
 # 处理单个文件
-def singleFileCounter(filePath, filename):
-    infile = open(filePath, 'r')
+def singleFileCounter(filePath, filename, isDocFile):
+    try:
+        if isDocFile:
+            infile = docx.Document(filePath)
+            for para in infile.paragraphs:
+                print(para.text)
+                for line in para.text:
+                    print(line)
+                    processLine(line, filename)
+        else:
+            infile = open(filePath, 'r')
+            # 建立用于计算词频的空字典
+            for line in infile:
+                processLine(line, filename)
+            infile.close()
+    except:
+        """
+        避免出现 docx 中 PackageNotFoundError的错误，原因是一些 word 会生成隐藏的临时文件导致读取的时候失败
+        """
+        return
 
-    # 建立用于计算词频的空字典
-    for line in infile:
-        processLine(line, filename)
-    infile.close()
+
 
 def recordDataIntoXls(sheet, items, count):
     words = []
@@ -81,11 +101,18 @@ def excuteCounter(documentPath, excelName):
 
         for filename in fs:
             print ('filename =' + filename)
-            if os.path.splitext(filename)[1] == '.txt':
-                fileNameWithoutExp = os.path.splitext(filename)[0]
-                filepath = os.path.join(fpathe, filename)
-                print('当前文件名 ' + fileNameWithoutExp)
-                singleFileCounter(filepath, fileNameWithoutExp)
+            extendName = os.path.splitext(filename)[1]
+            fileNameWithoutExp = os.path.splitext(filename)[0]
+            filepath = os.path.join(fpathe, filename)
+
+            print('当前文件名 ' + fileNameWithoutExp)
+            if extendName in extendDocx:
+                singleFileCounter(filepath, fileNameWithoutExp, True)
+            elif extendName == '.txt':
+                singleFileCounter(filepath, fileNameWithoutExp, False)
+            else:
+                continue
+
 
     # 从字典中获取数据对
     pairs = list(wordCountDict.items())

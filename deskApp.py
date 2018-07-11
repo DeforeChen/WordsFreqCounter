@@ -53,7 +53,7 @@ class Application(Frame):
 app = Application()
 # 设置窗口标题:
 app.master.wm_title('敕造词频录')
-app.master.geometry('500x200+500+500')
+app.master.geometry('500x100+500+500')
 app.master['bg'] = '#ffffff'
 
 
